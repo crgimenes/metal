@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/color"
+	"log"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -34,12 +36,40 @@ func block(screen *ebiten.Image) {
 	screen.DrawImage(square, opts)
 }
 
+var img *image.RGBA
+var screenWidth = 320
+var screenHeight = 240
+
+func drawPix(x, y int) {
+	pos := 4*y*screenWidth + 4*x
+	img.Pix[pos] = 0xff
+	img.Pix[pos+1] = 0xff
+	img.Pix[pos+2] = 0xff
+	img.Pix[pos+3] = 0xff
+}
+
 func update(screen *ebiten.Image) error {
 
 	screen.Fill(color.NRGBA{0x00, 0x00, 0xff, 0xff})
 
 	block(screen)
+	////
 
+	drawPix(100, 100)
+	drawPix(101, 100)
+	drawPix(102, 100)
+	drawPix(103, 100)
+	drawPix(104, 100)
+	drawPix(105, 100)
+	drawPix(100, 100)
+	drawPix(101, 101)
+	drawPix(102, 102)
+	drawPix(103, 103)
+	drawPix(104, 104)
+	drawPix(105, 105)
+	screen.ReplacePixels(img.Pix)
+
+	////
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		ebitenutil.DebugPrint(screen, "You're pressing the 'UP' button.")
 	}
@@ -78,6 +108,12 @@ func update(screen *ebiten.Image) error {
 }
 
 func main() {
+
+	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
+	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "Game of Life (Ebiten Demo)"); err != nil {
+		log.Fatal(err)
+	}
+
 	if err := ebiten.Run(update, 320, 240, 2, "Metal"); err != nil {
 		panic(err)
 	}
