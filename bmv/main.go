@@ -50,8 +50,17 @@ func main() {
 	finfo := fileInfo{}
 	line := 0
 	var l string
+	var comment string
 	for s.Scan() {
 		l = strings.TrimSpace(s.Text())
+
+		l, comment, err = splitComment(l)
+		if err != nil {
+			println(err.Error())
+			os.Exit(1)
+		}
+
+		println(comment)
 
 		if l == "" {
 			continue
@@ -67,7 +76,7 @@ func main() {
 		case 3:
 			p := strings.Split(l, " ")
 			if len(p) != 2 {
-				println("File format error, line 3, expected height and width")
+				println("File format error, expected height and width")
 				os.Exit(1)
 			}
 			finfo.Height, err = strconv.Atoi(p[0])
@@ -86,4 +95,8 @@ func main() {
 
 		line++
 	}
+}
+
+func splitComment(line string) (line, comment string, err error) {
+	return
 }
