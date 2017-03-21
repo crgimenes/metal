@@ -55,13 +55,15 @@ func main() {
 		scanner.ScanComments
 	var tok rune
 
+	ntok := 0
 	for tok != scanner.EOF {
 		tok = s.Scan()
 		if tok == scanner.Comment {
 			println(s.TokenText())
 		} else {
-			fmt.Println("At position", s.Pos(), ":", s.TokenText())
 
+			fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
+			ntok++
 		}
 	}
 
