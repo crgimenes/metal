@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bufio"
+	"fmt"
 	"os"
-	"strconv"
-	"strings"
+	"text/scanner"
 
 	"github.com/crgimenes/goConfig"
 )
@@ -45,58 +44,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := bufio.NewScanner(iFile)
+	var s scanner.Scanner
+	s.Init(iFile)
+	s.Filename = cfg.InputFile
+	s.Mode = scanner.ScanIdents |
+		scanner.ScanFloats |
+		scanner.ScanChars |
+		scanner.ScanStrings |
+		scanner.ScanRawStrings |
+		scanner.ScanComments
+	var tok rune
 
-	finfo := fileInfo{}
-	line := 0
-	var l string
-	var comment string
-	for s.Scan() {
-		l = strings.TrimSpace(s.Text())
+	for tok != scanner.EOF {
+		tok = s.Scan()
+		if tok == scanner.Comment {
+			println(s.TokenText())
+		} else {
+			fmt.Println("At position", s.Pos(), ":", s.TokenText())
 
-		l, comment, err = splitComment(l)
-		if err != nil {
-			println(err.Error())
-			os.Exit(1)
 		}
-
-		println(comment)
-
-		if l == "" {
-			continue
-		}
-
-		switch line {
-		case 0:
-			finfo.Version = l
-		case 1:
-			finfo.PackageName = l
-		case 2:
-			finfo.ObjectName = l
-		case 3:
-			p := strings.Split(l, " ")
-			if len(p) != 2 {
-				println("File format error, expected height and width")
-				os.Exit(1)
-			}
-			finfo.Height, err = strconv.Atoi(p[0])
-			if err != nil {
-				println(err.Error())
-				os.Exit(1)
-			}
-			finfo.Width, err = strconv.Atoi(p[1])
-			if err != nil {
-				println(err.Error())
-				os.Exit(1)
-			}
-		default:
-			println(l)
-		}
-
-		line++
 	}
-}
 
-func splitComment(line string) (line, comment string, err error) {
-	return
 }
