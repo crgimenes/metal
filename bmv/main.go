@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"text/scanner"
 
 	"github.com/crgimenes/goConfig"
@@ -44,6 +45,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	fi := fileInfo{}
+
 	var s scanner.Scanner
 	s.Init(iFile)
 	s.Filename = cfg.InputFile
@@ -62,7 +65,33 @@ func main() {
 			println(s.TokenText())
 		} else {
 
-			fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
+			switch ntok {
+			case 0:
+				fi.Version = s.TokenText()
+			case 1:
+				fi.PackageName = s.TokenText()
+			case 2:
+				fi.ObjectName = s.TokenText()
+			case 3:
+				var h int
+				h, err = strconv.Atoi(s.TokenText())
+				if err != nil {
+					println(err.Error())
+					os.Exit(1)
+				}
+				fi.Height = h
+			case 4:
+				var w int
+				w, err = strconv.Atoi(s.TokenText())
+				if err != nil {
+					println(err.Error())
+					os.Exit(1)
+				}
+				fi.Width = w
+			default:
+				fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
+			}
+
 			ntok++
 		}
 	}
