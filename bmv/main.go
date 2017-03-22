@@ -53,7 +53,13 @@ func parse(fileName string) (err error) {
 	if err != nil {
 		return
 	}
-	defer iFile.Close()
+	defer func() {
+		err = iFile.Close()
+		if err != nil {
+			println(err.Error())
+			os.Exit(1)
+		}
+	}()
 
 	fi := fileInfo{}
 
