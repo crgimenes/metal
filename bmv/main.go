@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"text/scanner"
@@ -113,7 +114,17 @@ func parse(fileName string) (err error) {
 				fi.Width = w
 			default:
 				//fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
-				out += s.TokenText() + "\n"
+				bs := s.TokenText()
+				if bs == "" {
+					continue
+				}
+				var r int64
+				r, err = strconv.ParseInt(bs, 2, 8)
+				if err != nil {
+					println(err.Error())
+					return
+				}
+				out += fmt.Sprintf("0x%02X,\t// %v\n", r, bs)
 			}
 
 			ntok++
