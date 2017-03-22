@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 	"text/scanner"
@@ -21,6 +20,8 @@ type fileInfo struct {
 	Height      int
 	Width       int
 }
+
+const alert = "/* Automatically generated, do not change manually. */"
 
 func main() {
 
@@ -46,6 +47,11 @@ func main() {
 }
 
 func parse(fileName string) (err error) {
+
+	var out string
+
+	out = alert + "\n\n"
+
 	var iFile *os.File
 	//var oFile *os.File
 
@@ -78,7 +84,7 @@ func parse(fileName string) (err error) {
 	for tok != scanner.EOF {
 		tok = s.Scan()
 		if tok == scanner.Comment {
-			println(s.TokenText())
+			out += s.TokenText() + "\n"
 		} else {
 
 			switch ntok {
@@ -86,8 +92,11 @@ func parse(fileName string) (err error) {
 				fi.Version = s.TokenText()
 			case 1:
 				fi.PackageName = s.TokenText()
+				out += "\npackage " + fi.PackageName + "\n\n"
 			case 2:
 				fi.ObjectName = s.TokenText()
+				out += "var " + fi.PackageName + " [][]byte" + "\n\n"
+				out += "func Load" + fi.PackageName + "() {\n\n"
 			case 3:
 				var h int
 				h, err = strconv.Atoi(s.TokenText())
@@ -103,11 +112,16 @@ func parse(fileName string) (err error) {
 				}
 				fi.Width = w
 			default:
-				fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
+				//fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
+				out += s.TokenText() + "\n"
 			}
 
 			ntok++
 		}
 	}
+	out += "}\n"
+
+	println(out)
+
 	return
 }
