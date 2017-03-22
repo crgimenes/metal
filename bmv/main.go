@@ -91,27 +91,29 @@ func parse(fileName string) (err error) {
 			case 0:
 				fi.Version = s.TokenText()
 			case 1:
-				fi.PackageName = s.TokenText()
-				out += "\npackage " + fi.PackageName + "\n\n"
-			case 2:
-				fi.ObjectName = s.TokenText()
-				out += "var " + fi.ObjectName + " [][]byte" + "\n\n"
-				out += "func Load" + fi.ObjectName + "() {\n\n"
-				out += "\t" + fi.ObjectName + " = [][]byte{\n"
-			case 3:
 				var h int
 				h, err = strconv.Atoi(s.TokenText())
 				if err != nil {
 					return
 				}
 				fi.Height = h
-			case 4:
+			case 2:
 				var w int
 				w, err = strconv.Atoi(s.TokenText())
 				if err != nil {
 					return
 				}
 				fi.Width = w
+			case 3:
+				fi.PackageName = s.TokenText()
+				out += "\npackage " + fi.PackageName + "\n\n"
+			case 4:
+				fi.ObjectName = s.TokenText()
+				out += "var " + fi.ObjectName + "Height = " + strconv.Itoa(fi.Height) + "\n"
+				out += "var " + fi.ObjectName + "Width = " + strconv.Itoa(fi.Height) + "\n"
+				out += "var " + fi.ObjectName + " [][]byte" + "\n\n"
+				out += "func Load" + fi.ObjectName + "() {\n\n"
+				out += "\t" + fi.ObjectName + " = [][]byte{\n"
 			default:
 				//fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
 				bs := s.TokenText()
