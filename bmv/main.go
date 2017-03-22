@@ -31,6 +31,7 @@ func main() {
 	goConfig.PrefixEnv = "BMV"
 	err := goConfig.Parse(&cfg)
 	if err != nil {
+		println(err.Error())
 		os.Exit(1)
 	}
 
@@ -50,10 +51,9 @@ func main() {
 func parse(fileName string) (err error) {
 
 	var out string
+	var iFile *os.File
 
 	out = alert + "\n\n"
-
-	var iFile *os.File
 	//var oFile *os.File
 
 	iFile, err = os.Open(fileName)
@@ -61,10 +61,9 @@ func parse(fileName string) (err error) {
 		return
 	}
 	defer func() {
-		err = iFile.Close()
-		if err != nil {
-			println(err.Error())
-			os.Exit(1)
+		if e := iFile.Close(); e != nil {
+			err = e
+			return
 		}
 	}()
 
@@ -118,8 +117,15 @@ func parse(fileName string) (err error) {
 				if bs == "" {
 					continue
 				}
+
+				if len(bs) > fi.Width {
+					err = fmt.Errorf("Error at %v", s.Pos())
+					println(err.Error())
+					return
+				}
+
 				var r int64
-				r, err = strconv.ParseInt(bs, 2, 8)
+				r, err = strconv.ParseInt(bs, 2, 64)
 				if err != nil {
 					println(err.Error())
 					return
