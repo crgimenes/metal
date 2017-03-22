@@ -95,8 +95,9 @@ func parse(fileName string) (err error) {
 				out += "\npackage " + fi.PackageName + "\n\n"
 			case 2:
 				fi.ObjectName = s.TokenText()
-				out += "var " + fi.PackageName + " [][]byte" + "\n\n"
-				out += "func Load" + fi.PackageName + "() {\n\n"
+				out += "var " + fi.ObjectName + " [][]byte" + "\n\n"
+				out += "func Load" + fi.ObjectName + "() {\n\n"
+				out += "\t" + fi.ObjectName + " = [][]byte{\n"
 			case 3:
 				var h int
 				h, err = strconv.Atoi(s.TokenText())
