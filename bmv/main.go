@@ -37,19 +37,29 @@ func main() {
 		os.Exit(1)
 	}
 
+	err = parse(cfg.InputFile)
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
+
+}
+
+func parse(fileName string) (err error) {
 	var iFile *os.File
 	//var oFile *os.File
 
-	iFile, err = os.Open(cfg.InputFile)
+	iFile, err = os.Open(fileName)
 	if err != nil {
-		os.Exit(1)
+		return
 	}
+	defer iFile.Close()
 
 	fi := fileInfo{}
 
 	var s scanner.Scanner
 	s.Init(iFile)
-	s.Filename = cfg.InputFile
+	s.Filename = fileName
 	s.Mode = scanner.ScanIdents |
 		scanner.ScanFloats |
 		scanner.ScanChars |
@@ -76,16 +86,14 @@ func main() {
 				var h int
 				h, err = strconv.Atoi(s.TokenText())
 				if err != nil {
-					println(err.Error())
-					os.Exit(1)
+					return
 				}
 				fi.Height = h
 			case 4:
 				var w int
 				w, err = strconv.Atoi(s.TokenText())
 				if err != nil {
-					println(err.Error())
-					os.Exit(1)
+					return
 				}
 				fi.Width = w
 			default:
@@ -95,5 +103,5 @@ func main() {
 			ntok++
 		}
 	}
-
+	return
 }
