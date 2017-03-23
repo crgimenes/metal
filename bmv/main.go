@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go/format"
 	"os"
 	"strconv"
 	"text/scanner"
@@ -113,7 +114,7 @@ func parse(fileName string) (err error) {
 				out += "var " + fi.ObjectName + "Width = " + strconv.Itoa(fi.Height) + "\n"
 				out += "var " + fi.ObjectName + " [][]byte" + "\n\n"
 				out += "func Load" + fi.ObjectName + "() {\n\n"
-				out += "\t" + fi.ObjectName + " = [][]byte{\n"
+				out += fi.ObjectName + " = [][]byte{\n"
 			default:
 				//fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
 				bs := s.TokenText()
@@ -136,7 +137,7 @@ func parse(fileName string) (err error) {
 					println(err.Error())
 					return
 				}
-				out += fmt.Sprintf("0x%02X,\t// %v\n", r, bs)
+				out += fmt.Sprintf("0x%02X, // %v\n", r, bs)
 
 				hCount++
 				if hCount >= fi.Height {
@@ -147,10 +148,18 @@ func parse(fileName string) (err error) {
 
 			ntok++
 		}
+
 	}
 	out += "}\n"
+	out += "}\n"
+	//println(out)
 
-	println(out)
+	arr := []byte(out)
+	arr, err = format.Source(arr)
+	if err != nil {
+		return
+	}
+	println(string(arr))
 
 	return
 }
