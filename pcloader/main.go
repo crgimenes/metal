@@ -110,7 +110,7 @@ func update(screen *ebiten.Image) error {
 func main() {
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
-	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "Game of Life (Ebiten Demo)"); err != nil {
+	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
 		log.Fatal(err)
 	}
 
