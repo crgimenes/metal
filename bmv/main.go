@@ -52,7 +52,7 @@ func parse(fileName string) (err error) {
 
 	var out string
 	var iFile *os.File
-
+	var hCount int
 	out = alert + "\n\n"
 	//var oFile *os.File
 
@@ -120,6 +120,9 @@ func parse(fileName string) (err error) {
 				if bs == "" {
 					continue
 				}
+				if hCount == 0 {
+					out += "\n{\n"
+				}
 
 				if len(bs) > fi.Width {
 					err = fmt.Errorf("Error at %v", s.Pos())
@@ -134,6 +137,12 @@ func parse(fileName string) (err error) {
 					return
 				}
 				out += fmt.Sprintf("0x%02X,\t// %v\n", r, bs)
+
+				hCount++
+				if hCount >= fi.Height {
+					hCount = 0
+					out += "\n},\n"
+				}
 			}
 
 			ntok++
