@@ -122,7 +122,7 @@ func parse(fileName string) (err error) {
 					continue
 				}
 				if hCount == 0 {
-					out += "\n{\n"
+					out += "{\n"
 				}
 
 				if len(bs) > fi.Width {
@@ -142,7 +142,7 @@ func parse(fileName string) (err error) {
 				hCount++
 				if hCount >= fi.Height {
 					hCount = 0
-					out += "\n},\n"
+					out += "},\n"
 				}
 			}
 
@@ -150,8 +150,7 @@ func parse(fileName string) (err error) {
 		}
 
 	}
-	out += "}\n"
-	out += "}\n"
+	out += "}}\n"
 	//println(out)
 
 	arr := []byte(out)
