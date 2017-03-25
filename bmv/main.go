@@ -107,7 +107,7 @@ func parse(fileName string) (err error) {
 				fi.Width = w
 			case 3:
 				fi.PackageName = s.TokenText()
-				out += "\npackage " + fi.PackageName + "\n\n"
+				out += "package " + fi.PackageName + "\n"
 			case 4:
 				fi.ObjectName = s.TokenText()
 				out += "var " + fi.ObjectName + "Height = " + strconv.Itoa(fi.Height) + "\n"
