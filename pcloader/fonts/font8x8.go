@@ -8,6 +8,8 @@ type Font8x8 struct {
 
 func (f *Font8x8) Load() {
 
+	f.Height = 8
+	f.Width = 8
 	f.Bitmap = [][]byte{
 		{
 			0x00,
