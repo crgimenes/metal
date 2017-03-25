@@ -1,10 +1,14 @@
 package fonts
 
-var Font8x8 [][]byte
+type Font8x8 struct {
+	Height int
+	Width  int
+	Bitmap [][]byte
+}
 
-func Load8x8() {
+func (f *Font8x8) Load() {
 
-	Font8x8 = [][]byte{
+	f.Bitmap = [][]byte{
 		{
 			0x00,
 			0x00,
