@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"log"
 
 	"github.com/crgimenes/metal/pcloader/fonts"
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 var square *ebiten.Image
@@ -50,6 +48,23 @@ func drawPix(x, y int) {
 	img.Pix[pos+3] = 0xff
 }
 
+func getBit(n int, pos uint64) bool {
+	// from right to left
+	val := n & (1 << pos)
+	return (val > 0)
+}
+
+func drawChar(index, x, y int) {
+	var a, b uint64
+	for a = 0; a < 8; a++ {
+		for b = 0; b < 8; b++ {
+			if font.Bitmap[index][b]&(0x80>>a) != 0 {
+				drawPix(int(a)+x, int(b)+y)
+			}
+		}
+	}
+}
+
 func update(screen *ebiten.Image) error {
 
 	screen.Fill(color.NRGBA{0x00, 0x00, 0xff, 0xff})
@@ -68,55 +83,48 @@ func update(screen *ebiten.Image) error {
 		drawPix(104, 104)
 		drawPix(105, 105)
 	*/
-	var xa uint64
-	var ya uint64
-
-	for xa = 0; xa < 8; xa++ {
-		for ya = 0; ya < 8; ya++ {
-			if font.Bitmap[1][ya]&(0x80>>xa) != 0 {
-				drawPix(int(xa)+100, int(ya)+100)
-			}
-		}
-	}
+	drawChar(0, 100, 100)
+	drawChar(1, 100+8, 100)
+	drawChar(2, 100+8+8, 100)
 	screen.ReplacePixels(img.Pix)
 
-	block(screen)
+	//block(screen)
+	/*
+		////
+		if ebiten.IsKeyPressed(ebiten.KeyUp) {
+			ebitenutil.DebugPrint(screen, "You're pressing the 'UP' button.")
+		}
+		// When the "down arrow key" is pressed..
+		if ebiten.IsKeyPressed(ebiten.KeyDown) {
+			ebitenutil.DebugPrint(screen, "\nYou're pressing the 'DOWN' button.")
+		}
+		// When the "left arrow key" is pressed..
+		if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+			ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'LEFT' button.")
+		}
+		// When the "right arrow key" is pressed..
+		if ebiten.IsKeyPressed(ebiten.KeyRight) {
+			ebitenutil.DebugPrint(screen, "\n\n\nYou're pressing the 'RIGHT' button.")
+		}
 
-	////
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		ebitenutil.DebugPrint(screen, "You're pressing the 'UP' button.")
-	}
-	// When the "down arrow key" is pressed..
-	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		ebitenutil.DebugPrint(screen, "\nYou're pressing the 'DOWN' button.")
-	}
-	// When the "left arrow key" is pressed..
-	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'LEFT' button.")
-	}
-	// When the "right arrow key" is pressed..
-	if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		ebitenutil.DebugPrint(screen, "\n\n\nYou're pressing the 'RIGHT' button.")
-	}
+		// When the "left mouse button" is pressed...
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			ebitenutil.DebugPrint(screen, "You're pressing the 'LEFT' mouse button.")
+		}
+		// When the "right mouse button" is pressed...
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
+			ebitenutil.DebugPrint(screen, "\nYou're pressing the 'RIGHT' mouse button.")
+		}
+		// When the "middle mouse button" is pressed...
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle) {
+			ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'MIDDLE' mouse button.")
+		}
 
-	// When the "left mouse button" is pressed...
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		ebitenutil.DebugPrint(screen, "You're pressing the 'LEFT' mouse button.")
-	}
-	// When the "right mouse button" is pressed...
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
-		ebitenutil.DebugPrint(screen, "\nYou're pressing the 'RIGHT' mouse button.")
-	}
-	// When the "middle mouse button" is pressed...
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle) {
-		ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'MIDDLE' mouse button.")
-	}
+		x, y := ebiten.CursorPosition()
 
-	x, y := ebiten.CursorPosition()
-
-	// Display the information with "X: xx, Y: xx" format
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("X: %d, Y: %d", x, y))
-
+		// Display the information with "X: xx, Y: xx" format
+		ebitenutil.DebugPrint(screen, fmt.Sprintf("X: %d, Y: %d", x, y))
+	*/
 	return nil
 }
 
