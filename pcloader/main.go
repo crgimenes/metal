@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"log"
 
+	"github.com/crgimenes/metal/pcloader/fonts"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
@@ -39,6 +40,7 @@ func block(screen *ebiten.Image) {
 var img *image.RGBA
 var screenWidth = 320
 var screenHeight = 240
+var font fonts.Font8x8
 
 func drawPix(x, y int) {
 	pos := 4*y*screenWidth + 4*x
@@ -51,23 +53,34 @@ func drawPix(x, y int) {
 func update(screen *ebiten.Image) error {
 
 	screen.Fill(color.NRGBA{0x00, 0x00, 0xff, 0xff})
+	////
+	/*
+		drawPix(100, 100)
+		drawPix(101, 100)
+		drawPix(102, 100)
+		drawPix(103, 100)
+		drawPix(104, 100)
+		drawPix(105, 100)
+		drawPix(100, 100)
+		drawPix(101, 101)
+		drawPix(102, 102)
+		drawPix(103, 103)
+		drawPix(104, 104)
+		drawPix(105, 105)
+	*/
+	var xa uint64
+	var ya uint64
+
+	for xa = 0; xa < 8; xa++ {
+		for ya = 0; ya < 8; ya++ {
+			if font.Bitmap[1][ya]&(0x80>>xa) != 0 {
+				drawPix(int(xa)+100, int(ya)+100)
+			}
+		}
+	}
+	screen.ReplacePixels(img.Pix)
 
 	block(screen)
-	////
-
-	drawPix(100, 100)
-	drawPix(101, 100)
-	drawPix(102, 100)
-	drawPix(103, 100)
-	drawPix(104, 100)
-	drawPix(105, 100)
-	drawPix(100, 100)
-	drawPix(101, 101)
-	drawPix(102, 102)
-	drawPix(103, 103)
-	drawPix(104, 104)
-	drawPix(105, 105)
-	screen.ReplacePixels(img.Pix)
 
 	////
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
@@ -108,6 +121,8 @@ func update(screen *ebiten.Image) error {
 }
 
 func main() {
+
+	font.Load()
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
