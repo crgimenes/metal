@@ -110,14 +110,17 @@ func parse(fileName string) (err error) {
 				out += "package " + fi.PackageName + "\n"
 			case 4:
 				fi.ObjectName = s.TokenText()
-				out += "type " + fi.ObjectName + " struct {\n"
-				out += "Height int\n"
-				out += "Width int\n"
-				out += "Bitmap [][]byte\n}\n\n"
-				out += "func (f *" + fi.ObjectName + ")Load(){\n\n"
-				out += "f.Height = " + strconv.Itoa(fi.Height) + "\n"
-				out += "f.Width = " + strconv.Itoa(fi.Width) + "\n"
-				out += "f.Bitmap = [][]byte{\n"
+
+				out += fmt.Sprintf(`type %v struct {
+Height int
+Width int
+Bitmap [][]byte
+}
+func (f *%v)Load(){
+f.Height = %d
+f.Width = %d
+f.Bitmap = [][]byte{
+`, fi.ObjectName, fi.ObjectName, fi.Height, fi.Width)
 			default:
 				//fmt.Println("At position", s.Pos(), ":", s.TokenText(), ntok)
 				bs := s.TokenText()
