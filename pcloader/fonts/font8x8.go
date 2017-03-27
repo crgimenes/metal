@@ -1,3 +1,8 @@
+/* Automatically generated, do not change manually. */
+
+/*
+Bitmap font 8x8 METAL BASIC 0.01
+*/
 package fonts
 
 type Font8x8 struct {
@@ -10,6 +15,17 @@ func (f *Font8x8) Load() {
 	f.Height = 8
 	f.Width = 8
 	f.Bitmap = [][]byte{
+		// blank or null
+		{
+			0x00, // 00000000
+			0x00, // 00000000
+			0x00, // 00000000
+			0x00, // 00000000
+			0x00, // 00000000
+			0x00, // 00000000
+			0x00, // 00000000
+			0x00, // 00000000
+		},
 		// A
 		{
 			0x7E, // 01111110
@@ -45,3 +61,4 @@ func (f *Font8x8) Load() {
 		},
 	}
 }
+
