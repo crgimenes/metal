@@ -46,6 +46,7 @@ var img *image.RGBA
 var videoChar [rows * columns]byte
 
 var font fonts.Font8x8
+var cursor int
 
 func drawPix(x, y int) {
 	pos := 4*y*screenWidth + 4*x
@@ -53,6 +54,14 @@ func drawPix(x, y int) {
 	img.Pix[pos+1] = 0xff
 	img.Pix[pos+2] = 0xff
 	img.Pix[pos+3] = 0xff
+}
+
+func drawOffPix(x, y int) {
+	pos := 4*y*screenWidth + 4*x
+	img.Pix[pos] = 0x00
+	img.Pix[pos+1] = 0x00
+	img.Pix[pos+2] = 0x00
+	img.Pix[pos+3] = 0x00
 }
 
 func getBit(n int, pos uint64) bool {
@@ -67,6 +76,8 @@ func drawChar(index byte, x, y int) {
 		for b = 0; b < 8; b++ {
 			if font.Bitmap[index][b]&(0x80>>a) != 0 {
 				drawPix(int(a)+x, int(b)+y)
+			} else {
+				drawOffPix(int(a)+x, int(b)+y)
 			}
 		}
 	}
@@ -79,6 +90,22 @@ func drawVideoTextMode() {
 			drawChar(videoChar[i], c*8, r*8)
 			i++
 		}
+	}
+}
+
+func clearVideoTextMode() {
+	for i := 0; i < rows*columns; i++ {
+		videoChar[i] = 0
+	}
+}
+
+func putChar(c byte) {
+	videoChar[cursor] = c
+	cursor++
+	if cursor >= rows*columns {
+		// move chars 1 row up
+		// subtract one row fron cursor
+		cursor = 0
 	}
 }
 
@@ -103,6 +130,9 @@ func update(screen *ebiten.Image) error {
 	//drawChar(0, 100, 100)
 	//drawChar(1, 100+8, 100)
 	//drawChar(2, 100+8+8, 100)
+
+	putChar(1)
+	putChar(0)
 
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
@@ -155,7 +185,7 @@ func main() {
 	for {
 		videoChar[i] = c
 		c++
-		if c > 2 {
+		if c > 3 {
 			c = 0
 		}
 		i++
