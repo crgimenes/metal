@@ -40,10 +40,11 @@ const screenHeight = 240 // 30 rows
 
 const rows = 30
 const columns = 40
+const rgbaSize = 4
 
 var img *image.RGBA
 
-var videoChar [rows * columns]byte
+var videoTextMemory [rows * columns]byte
 
 var font fonts.Font8x8
 var cursor int
@@ -87,7 +88,7 @@ func drawVideoTextMode() {
 	i := 0
 	for r := 0; r < rows; r++ {
 		for c := 0; c < columns; c++ {
-			drawChar(videoChar[i], c*8, r*8)
+			drawChar(videoTextMemory[i], c*8, r*8)
 			i++
 		}
 	}
@@ -95,14 +96,15 @@ func drawVideoTextMode() {
 
 func clearVideoTextMode() {
 	for i := 0; i < rows*columns; i++ {
-		videoChar[i] = 0
+		videoTextMemory[i] = 0
 	}
 }
 
 func putChar(c byte) {
-	videoChar[cursor] = c
+	videoTextMemory[cursor] = c
 	cursor++
 	if cursor >= rows*columns {
+		// todo:
 		// move chars 1 row up
 		// subtract one row fron cursor
 		cursor = 0
@@ -183,7 +185,7 @@ func main() {
 	c := byte(0)
 	tot := rows * columns
 	for {
-		videoChar[i] = c
+		videoTextMemory[i] = c
 		c++
 		if c > 3 {
 			c = 0
