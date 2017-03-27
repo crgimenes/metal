@@ -35,9 +35,16 @@ func block(screen *ebiten.Image) {
 	screen.DrawImage(square, opts)
 }
 
+const screenWidth = 320  // 40 columns
+const screenHeight = 240 // 30 rows
+
+const rows = 30
+const columns = 40
+
 var img *image.RGBA
-var screenWidth = 320
-var screenHeight = 240
+
+var videoChar [rows * columns]byte
+
 var font fonts.Font8x8
 
 func drawPix(x, y int) {
@@ -54,13 +61,23 @@ func getBit(n int, pos uint64) bool {
 	return (val > 0)
 }
 
-func drawChar(index, x, y int) {
+func drawChar(index byte, x, y int) {
 	var a, b uint64
 	for a = 0; a < 8; a++ {
 		for b = 0; b < 8; b++ {
 			if font.Bitmap[index][b]&(0x80>>a) != 0 {
 				drawPix(int(a)+x, int(b)+y)
 			}
+		}
+	}
+}
+
+func drawVideoTextMode() {
+	i := 0
+	for r := 0; r < rows; r++ {
+		for c := 0; c < columns; c++ {
+			drawChar(videoChar[i], c*8, r*8)
+			i++
 		}
 	}
 }
@@ -83,9 +100,11 @@ func update(screen *ebiten.Image) error {
 		drawPix(104, 104)
 		drawPix(105, 105)
 	*/
-	drawChar(0, 100, 100)
-	drawChar(1, 100+8, 100)
-	drawChar(2, 100+8+8, 100)
+	//drawChar(0, 100, 100)
+	//drawChar(1, 100+8, 100)
+	//drawChar(2, 100+8+8, 100)
+
+	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
 
 	//block(screen)
@@ -129,6 +148,21 @@ func update(screen *ebiten.Image) error {
 }
 
 func main() {
+
+	i := 0
+	c := byte(0)
+	tot := rows * columns
+	for {
+		videoChar[i] = c
+		c++
+		if c > 2 {
+			c = 0
+		}
+		i++
+		if i >= tot {
+			break
+		}
+	}
 
 	font.Load()
 
