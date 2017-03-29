@@ -3,28 +3,16 @@ package basic
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/crgimenes/lex"
 )
 
-// TokenParsers array
-var TokenParsers = []lex.TokenFunction{
-	lex.Ident,
-	lex.NewLine,
-	lex.NotImplemented,
-}
-
 // Parse current code
 func Parse() (err error) {
 
-	code := `10 print "test"
-20 goto 10`
+	var l lex.Lexer
 
-	var lex lex.Lexer
-	lex.MaxParseID = len(TokenParsers)
-
-	err = lex.Run(strings.NewReader(code))
+	l, err = lex.Parse("test.bas")
 	if err != nil {
 		if err != io.EOF {
 			println(err.Error())
@@ -32,7 +20,7 @@ func Parse() (err error) {
 		}
 	}
 
-	for _, t := range lex.Tokens {
+	for _, t := range l.Tokens {
 		fmt.Printf("%v\t%q\n", t.Type, t.Literal)
 	}
 
