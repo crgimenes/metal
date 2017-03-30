@@ -196,19 +196,8 @@ func update(screen *ebiten.Image) error {
 
 func main() {
 
-	i := 0
-	c := byte(0)
-	tot := rows * columns
-	for {
-		videoTextMemory[i] = c
-		c++
-		if c > 3 {
-			c = 0
-		}
-		i++
-		if i >= tot {
-			break
-		}
+	for i := 0; i < rows*columns; i++ {
+		videoTextMemory[i] = 0
 	}
 
 	font.Load()
