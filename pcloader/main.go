@@ -100,6 +100,16 @@ func clearVideoTextMode() {
 	}
 }
 
+func moveLineUp() {
+	for i := 0; i < rows*columns-columns; i++ {
+		videoTextMemory[i] = videoTextMemory[i+1]
+	}
+	for i := rows*columns - columns; i < rows*columns; i++ {
+		videoTextMemory[i] = 0
+	}
+
+}
+
 func putChar(c byte) {
 	videoTextMemory[cursor] = c
 	cursor++
@@ -107,13 +117,16 @@ func putChar(c byte) {
 		// todo:
 		// move chars 1 row up
 		// subtract one row fron cursor
-		cursor = 0
+		cursor -= columns
+		moveLineUp()
 	}
 }
 
+var dt byte
+
 func update(screen *ebiten.Image) error {
 
-	screen.Fill(color.NRGBA{0x00, 0x00, 0xff, 0xff})
+	//screen.Fill(color.NRGBA{0x00, 0x00, 0xff, 0xff})
 	////
 	/*
 		drawPix(100, 100)
@@ -133,12 +146,14 @@ func update(screen *ebiten.Image) error {
 	//drawChar(1, 100+8, 100)
 	//drawChar(2, 100+8+8, 100)
 
-	putChar(1)
-	putChar(0)
+	if dt > 2 {
+		dt = 0
+	}
+	putChar(dt)
+	dt++
 
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
-
 	//block(screen)
 	/*
 		////
@@ -201,10 +216,6 @@ func main() {
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
 		log.Fatal(err)
-	}
-
-	if err := ebiten.Run(update, 320, 240, 2, "Metal"); err != nil {
-		panic(err)
 	}
 
 }
