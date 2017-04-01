@@ -25,7 +25,7 @@ CGA	EGA	 VGA	    RGB	         Web    	Example
 Video memory
 
 +---------+----------+
-| 8 bits  | 8 bits   |
+| 8 bits  | 8 bits   | 4 bits to front color and 4 bits to back color
 +---------+----------+
 |char code|color code| 
 +---------+----------+
