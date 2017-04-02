@@ -8,22 +8,21 @@ import (
 	"github.com/hajimehoshi/ebiten"
 )
 
-const (
-	screenWidth  = 320 // 40 columns
-	screenHeight = 240 // 30 rows
+var square *ebiten.Image
 
-	rows     = 30
-	columns  = 40
-	rgbaSize = 4
-)
+const screenWidth = 320  // 40 columns
+const screenHeight = 240 // 30 rows
 
-var (
-	square          *ebiten.Image
-	img             *image.RGBA
-	videoTextMemory [rows * columns * 2]byte
-	font            fonts.Expert118x8
-	cursor          int
-)
+const rows = 30
+const columns = 40
+const rgbaSize = 4
+
+var img *image.RGBA
+
+var videoTextMemory [rows * columns]byte
+
+var font fonts.Expert118x8
+var cursor int
 
 func drawPix(x, y int) {
 	pos := 4*y*screenWidth + 4*x
@@ -47,7 +46,7 @@ func getBit(n int, pos uint64) bool {
 	return (val > 0)
 }
 
-func drawChar(index byte, color byte, x, y int) {
+func drawChar(index byte, x, y int) {
 	var a, b uint64
 	for a = 0; a < 8; a++ {
 		for b = 0; b < 8; b++ {
@@ -64,27 +63,21 @@ func drawVideoTextMode() {
 	i := 0
 	for r := 0; r < rows; r++ {
 		for c := 0; c < columns; c++ {
-			drawChar(videoTextMemory[i], videoTextMemory[i+1], c*8, r*8)
-			i += 2
+			drawChar(videoTextMemory[i], c*8, r*8)
+			i++
 		}
 	}
 }
 
 func clearVideoTextMode() {
-	for i := 0; i < rows*columns; i += 2 {
-		videoTextMemory[i] = 0xF0
-		videoTextMemory[i+1] = 0
+	for i := 0; i < rows*columns; i++ {
+		videoTextMemory[i] = 0
 	}
 }
 
 func moveLineUp() {
-	for i := 0; i < rows*columns-columns; i++ {
-		videoTextMemory[i] = videoTextMemory[i+1]
-	}
-	for i := rows*columns - columns; i < rows*columns; i++ {
-		videoTextMemory[i] = 0
-	}
-
+	copy(videoTextMemory[0:], videoTextMemory[columns:])
+	copy(videoTextMemory[len(videoTextMemory)-columns:], make([]byte, columns))
 }
 
 func putChar(c byte) {
