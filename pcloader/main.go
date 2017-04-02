@@ -8,21 +8,22 @@ import (
 	"github.com/hajimehoshi/ebiten"
 )
 
-var square *ebiten.Image
+const (
+	screenWidth  = 320 // 40 columns
+	screenHeight = 240 // 30 rows
 
-const screenWidth = 320  // 40 columns
-const screenHeight = 240 // 30 rows
+	rows     = 30
+	columns  = 40
+	rgbaSize = 4
+)
 
-const rows = 30
-const columns = 40
-const rgbaSize = 4
-
-var img *image.RGBA
-
-var videoTextMemory [rows * columns]byte
-
-var font fonts.Expert118x8
-var cursor int
+var (
+	videoTextMemory [rows * columns * 2]byte
+	cursor          int
+	img             *image.RGBA
+	square          *ebiten.Image
+	font            fonts.Expert118x8
+)
 
 func drawPix(x, y int) {
 	pos := 4*y*screenWidth + 4*x
@@ -63,6 +64,8 @@ func drawVideoTextMode() {
 	i := 0
 	for r := 0; r < rows; r++ {
 		for c := 0; c < columns; c++ {
+			// i == color code
+			i++
 			drawChar(videoTextMemory[i], c*8, r*8)
 			i++
 		}
@@ -74,45 +77,28 @@ func clearVideoTextMode() {
 }
 
 func moveLineUp() {
-	copy(videoTextMemory[0:], videoTextMemory[columns:])
-	copy(videoTextMemory[len(videoTextMemory)-columns:], make([]byte, columns))
+	copy(videoTextMemory[0:], videoTextMemory[columns*2:])
+	copy(videoTextMemory[len(videoTextMemory)-columns*2:], make([]byte, columns*2))
 }
 
 func putChar(c byte) {
+	// videoTextMemory[cursor] // color code
+	cursor++
 	videoTextMemory[cursor] = c
 	cursor++
-	if cursor >= rows*columns {
+	if cursor >= rows*columns*2 {
 		// todo:
 		// move chars 1 row up
 		// subtract one row fron cursor
-		cursor -= columns
+		cursor -= columns * 2
 		moveLineUp()
 	}
+
 }
 
 var dt byte
 
 func update(screen *ebiten.Image) error {
-
-	//screen.Fill(color.NRGBA{0x00, 0x00, 0xff, 0xff})
-	////
-	/*
-		drawPix(100, 100)
-		drawPix(101, 100)
-		drawPix(102, 100)
-		drawPix(103, 100)
-		drawPix(104, 100)
-		drawPix(105, 100)
-		drawPix(100, 100)
-		drawPix(101, 101)
-		drawPix(102, 102)
-		drawPix(103, 103)
-		drawPix(104, 104)
-		drawPix(105, 105)
-	*/
-	//drawChar(0, 100, 100)
-	//drawChar(1, 100+8, 100)
-	//drawChar(2, 100+8+8, 100)
 
 	putChar(dt)
 	dt++
@@ -162,7 +148,7 @@ func update(screen *ebiten.Image) error {
 func main() {
 
 	font.Load()
-	clearVideoTextMode()
+	//clearVideoTextMode()
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
