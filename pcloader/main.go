@@ -70,9 +70,7 @@ func drawVideoTextMode() {
 }
 
 func clearVideoTextMode() {
-	for i := 0; i < rows*columns; i++ {
-		videoTextMemory[i] = 0
-	}
+	copy(videoTextMemory[:], make([]byte, len(videoTextMemory)))
 }
 
 func moveLineUp() {
