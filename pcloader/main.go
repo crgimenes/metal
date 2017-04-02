@@ -47,7 +47,7 @@ func getBit(n int, pos uint64) bool {
 	return (val > 0)
 }
 
-func drawChar(index byte, x, y int) {
+func drawChar(index byte, color byte, x, y int) {
 	var a, b uint64
 	for a = 0; a < 8; a++ {
 		for b = 0; b < 8; b++ {
@@ -64,7 +64,7 @@ func drawVideoTextMode() {
 	i := 0
 	for r := 0; r < rows; r++ {
 		for c := 0; c < columns; c++ {
-			drawChar(videoTextMemory[i], c*8, r*8)
+			drawChar(videoTextMemory[i], videoTextMemory[i+1], c*8, r*8)
 			i += 2
 		}
 	}
