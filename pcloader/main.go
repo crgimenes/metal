@@ -25,6 +25,10 @@ var (
 	font            fonts.Expert118x8
 )
 
+func setColor(b, f byte) byte {
+	return (f & 0xff) | (b << 4)
+}
+
 func drawPix(x, y int) {
 	pos := 4*y*screenWidth + 4*x
 	img.Pix[pos] = 0xff
@@ -74,11 +78,18 @@ func drawVideoTextMode() {
 
 func clearVideoTextMode() {
 	copy(videoTextMemory[:], make([]byte, len(videoTextMemory)))
+	for i := 0; i < len(videoTextMemory); i += 2 {
+		videoTextMemory[i] = 0x0F
+	}
 }
 
 func moveLineUp() {
 	copy(videoTextMemory[0:], videoTextMemory[columns*2:])
 	copy(videoTextMemory[len(videoTextMemory)-columns*2:], make([]byte, columns*2))
+	for i := len(videoTextMemory) - columns*2; i < len(videoTextMemory); i += 2 {
+		videoTextMemory[i] = 0x0F
+	}
+
 }
 
 func putChar(c byte) {
@@ -87,9 +98,6 @@ func putChar(c byte) {
 	videoTextMemory[cursor] = c
 	cursor++
 	if cursor >= rows*columns*2 {
-		// todo:
-		// move chars 1 row up
-		// subtract one row fron cursor
 		cursor -= columns * 2
 		moveLineUp()
 	}
@@ -148,7 +156,7 @@ func update(screen *ebiten.Image) error {
 func main() {
 
 	font.Load()
-	//clearVideoTextMode()
+	clearVideoTextMode()
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
