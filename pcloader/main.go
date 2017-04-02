@@ -2,52 +2,28 @@ package main
 
 import (
 	"image"
-	"image/color"
 	"log"
 
 	"github.com/crgimenes/metal/pcloader/fonts"
 	"github.com/hajimehoshi/ebiten"
 )
 
-var square *ebiten.Image
+const (
+	screenWidth  = 320 // 40 columns
+	screenHeight = 240 // 30 rows
 
-func block(screen *ebiten.Image) {
-	if square == nil {
+	rows     = 30
+	columns  = 40
+	rgbaSize = 4
+)
 
-		// Create an 16x16 image
-		square, _ = ebiten.NewImage(16, 16, ebiten.FilterNearest)
-	}
-
-	// Fill the square with the white color
-
-	square.Fill(color.White)
-
-	// Create an empty option struct
-	opts := &ebiten.DrawImageOptions{}
-
-	// Add the Translate effect to the option struct.
-	w, h := screen.Size()
-	w = (w / 2) - (16 / 2)
-	h = (h / 2) - (16 / 2)
-	opts.GeoM.Translate(float64(w), float64(h))
-
-	// Draw the square image to the screen with an empty option
-	screen.DrawImage(square, opts)
-}
-
-const screenWidth = 320  // 40 columns
-const screenHeight = 240 // 30 rows
-
-const rows = 30
-const columns = 40
-const rgbaSize = 4
-
-var img *image.RGBA
-
-var videoTextMemory [rows * columns]byte
-
-var font fonts.Font8x8
-var cursor int
+var (
+	square          *ebiten.Image
+	img             *image.RGBA
+	videoTextMemory [rows * columns * 2]byte
+	font            fonts.Expert118x8
+	cursor          int
+)
 
 func drawPix(x, y int) {
 	pos := 4*y*screenWidth + 4*x
@@ -89,14 +65,15 @@ func drawVideoTextMode() {
 	for r := 0; r < rows; r++ {
 		for c := 0; c < columns; c++ {
 			drawChar(videoTextMemory[i], c*8, r*8)
-			i++
+			i += 2
 		}
 	}
 }
 
 func clearVideoTextMode() {
-	for i := 0; i < rows*columns; i++ {
-		videoTextMemory[i] = 0
+	for i := 0; i < rows*columns; i += 2 {
+		videoTextMemory[i] = 0xF0
+		videoTextMemory[i+1] = 0
 	}
 }
 
@@ -146,9 +123,6 @@ func update(screen *ebiten.Image) error {
 	//drawChar(1, 100+8, 100)
 	//drawChar(2, 100+8+8, 100)
 
-	if dt > 2 {
-		dt = 0
-	}
 	putChar(dt)
 	dt++
 
@@ -196,11 +170,8 @@ func update(screen *ebiten.Image) error {
 
 func main() {
 
-	for i := 0; i < rows*columns; i++ {
-		videoTextMemory[i] = 0
-	}
-
 	font.Load()
+	clearVideoTextMode()
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
