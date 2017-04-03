@@ -74,10 +74,28 @@ func drawChar(index, fgColor, bgColor byte, x, y int) {
 			if font.Bitmap[index][b]&(0x80>>a) != 0 {
 				drawPix(int(a)+x, int(b)+y, fgColor)
 			} else {
-				//drawOffPix(int(a)+x, int(b)+y)
 				drawPix(int(a)+x, int(b)+y, bgColor)
 			}
 		}
+	}
+}
+
+var cursorBlinkTimer int
+var cursorSetBlink bool = true
+
+func drawCursor(index, fgColor, bgColor byte, x, y int) {
+	if cursorSetBlink {
+		if cursorBlinkTimer < 15 {
+			drawChar(index, fgColor, bgColor, x, y)
+		} else {
+			drawChar(index, bgColor, fgColor, x, y)
+		}
+		cursorBlinkTimer++
+		if cursorBlinkTimer > 30 {
+			cursorBlinkTimer = 0
+		}
+	} else {
+		drawChar(index, bgColor, fgColor, x, y)
 	}
 }
 
@@ -89,7 +107,11 @@ func drawVideoTextMode() {
 			f := color & 0x0f
 			b := color & 0xf0 >> 4
 			i++
-			drawChar(videoTextMemory[i], f, b, c*8, r*8)
+			if i-1 == cursor {
+				drawCursor(videoTextMemory[i], f, b, c*8, r*8)
+			} else {
+				drawChar(videoTextMemory[i], f, b, c*8, r*8)
+			}
 			i++
 		}
 	}
@@ -145,12 +167,16 @@ func bPrintln(msg string) {
 	bPrint(msg)
 }
 
-//var dt byte
-//var c byte
+var dt byte
+var c byte
 
 var machine int
+var countaux int
 
 func update(screen *ebiten.Image) error {
+
+	//putChar(2)
+	//cursor -= 2
 
 	if machine == 0 {
 		bPrintln("teste0")
@@ -159,13 +185,17 @@ func update(screen *ebiten.Image) error {
 		machine++
 	}
 
-	//putChar(dt)
-	//dt++
-	//currentColor = mergeColorCode(0x0, c)
-	//c++
-	//if c > 15 {
-	//	c = 0
-	//}
+	if countaux > 10 {
+		countaux = 0
+		putChar(dt)
+		dt++
+		currentColor = mergeColorCode(0x0, c)
+		c++
+		if c > 15 {
+			c = 0
+		}
+	}
+	countaux++
 
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
