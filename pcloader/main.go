@@ -207,6 +207,15 @@ func update(screen *ebiten.Image) error {
 
 	//println(cursor)
 
+	for c := 'A'; c <= 'Z'; c++ {
+		if ebiten.IsKeyPressed(ebiten.Key(c) - 'A' + ebiten.KeyA) {
+			if kp == 0 {
+				putChar(byte(c))
+			}
+			kp++
+		}
+	}
+
 	////
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		//ebitenutil.DebugPrint(screen, "You're pressing the 'UP' button.")
