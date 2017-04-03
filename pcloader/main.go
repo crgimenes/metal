@@ -122,18 +122,36 @@ func putChar(c byte) {
 	}
 }
 
-var dt byte
-var c byte
+func bPrintln(msg string) {
+	for i := 0; i < len(msg); i++ {
+		c := msg[i]
+		if c == 13 {
+			cursor += columns * 2
+			continue
+		}
+		putChar(msg[i])
+	}
+}
+
+//var dt byte
+//var c byte
+
+var machine int
 
 func update(screen *ebiten.Image) error {
 
-	putChar(dt)
-	dt++
-	currentColor = mergeColorCode(0x0, c)
-	c++
-	if c > 15 {
-		c = 0
+	if machine == 0 {
+		bPrintln("teste\r\nteste\r\nteste")
+		machine++
 	}
+
+	//putChar(dt)
+	//dt++
+	//currentColor = mergeColorCode(0x0, c)
+	//c++
+	//if c > 15 {
+	//	c = 0
+	//}
 
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
