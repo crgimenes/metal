@@ -23,26 +23,42 @@ var (
 	img             *image.RGBA
 	square          *ebiten.Image
 	font            fonts.Expert118x8
+	currentColor    byte = 0x0f
 )
 
-func setColor(b, f byte) byte {
+var CGAColors = []struct {
+	R byte
+	G byte
+	B byte
+}{
+	{0, 0, 0},
+	{0, 0, 170},
+	{0, 170, 0},
+	{0, 170, 170},
+	{170, 0, 0},
+	{170, 0, 170},
+	{170, 85, 0},
+	{170, 170, 170},
+	{85, 85, 85},
+	{85, 85, 255},
+	{85, 255, 85},
+	{85, 255, 255},
+	{255, 85, 85},
+	{255, 85, 255},
+	{255, 255, 85},
+	{255, 255, 255},
+}
+
+func mergeColorCode(b, f byte) byte {
 	return (f & 0xff) | (b << 4)
 }
 
-func drawPix(x, y int) {
+func drawPix(x, y int, color byte) {
 	pos := 4*y*screenWidth + 4*x
-	img.Pix[pos] = 0xff
-	img.Pix[pos+1] = 0xff
-	img.Pix[pos+2] = 0xff
+	img.Pix[pos] = CGAColors[color].R
+	img.Pix[pos+1] = CGAColors[color].G
+	img.Pix[pos+2] = CGAColors[color].B
 	img.Pix[pos+3] = 0xff
-}
-
-func drawOffPix(x, y int) {
-	pos := 4*y*screenWidth + 4*x
-	img.Pix[pos] = 0x00
-	img.Pix[pos+1] = 0x00
-	img.Pix[pos+2] = 0x00
-	img.Pix[pos+3] = 0x00
 }
 
 func getBit(n int, pos uint64) bool {
@@ -51,14 +67,15 @@ func getBit(n int, pos uint64) bool {
 	return (val > 0)
 }
 
-func drawChar(index byte, x, y int) {
+func drawChar(index, fgColor, bgColor byte, x, y int) {
 	var a, b uint64
 	for a = 0; a < 8; a++ {
 		for b = 0; b < 8; b++ {
 			if font.Bitmap[index][b]&(0x80>>a) != 0 {
-				drawPix(int(a)+x, int(b)+y)
+				drawPix(int(a)+x, int(b)+y, fgColor)
 			} else {
-				drawOffPix(int(a)+x, int(b)+y)
+				//drawOffPix(int(a)+x, int(b)+y)
+				drawPix(int(a)+x, int(b)+y, bgColor)
 			}
 		}
 	}
@@ -68,9 +85,11 @@ func drawVideoTextMode() {
 	i := 0
 	for r := 0; r < rows; r++ {
 		for c := 0; c < columns; c++ {
-			// i == color code
+			color := videoTextMemory[i]
+			f := color & 0x0f
+			b := color & 0xf0 >> 4
 			i++
-			drawChar(videoTextMemory[i], c*8, r*8)
+			drawChar(videoTextMemory[i], f, b, c*8, r*8)
 			i++
 		}
 	}
@@ -93,7 +112,7 @@ func moveLineUp() {
 }
 
 func putChar(c byte) {
-	// videoTextMemory[cursor] // color code
+	videoTextMemory[cursor] = currentColor
 	cursor++
 	videoTextMemory[cursor] = c
 	cursor++
@@ -101,15 +120,20 @@ func putChar(c byte) {
 		cursor -= columns * 2
 		moveLineUp()
 	}
-
 }
 
 var dt byte
+var c byte
 
 func update(screen *ebiten.Image) error {
 
 	putChar(dt)
 	dt++
+	currentColor = mergeColorCode(0x0, c)
+	c++
+	if c > 15 {
+		c = 0
+	}
 
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
