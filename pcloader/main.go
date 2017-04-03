@@ -122,15 +122,27 @@ func putChar(c byte) {
 	}
 }
 
-func bPrintln(msg string) {
+func bPrint(msg string) {
 	for i := 0; i < len(msg); i++ {
 		c := msg[i]
-		if c == 13 {
+
+		switch c {
+		case 13:
 			cursor += columns * 2
+			continue
+		case 10:
+			aux := cursor / (columns * 2)
+			aux = aux * (columns * 2)
+			cursor = aux
 			continue
 		}
 		putChar(msg[i])
 	}
+}
+
+func bPrintln(msg string) {
+	msg += "\r\n"
+	bPrint(msg)
 }
 
 //var dt byte
@@ -141,7 +153,9 @@ var machine int
 func update(screen *ebiten.Image) error {
 
 	if machine == 0 {
-		bPrintln("teste\r\nteste\r\nteste")
+		bPrintln("teste0")
+		bPrintln("teste1")
+		bPrintln("teste2")
 		machine++
 	}
 
