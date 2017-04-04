@@ -4,6 +4,7 @@ Bare metal software
 
 Video colors 
 
+```
 CGA	EGA	 VGA	    RGB	         Web    	Example
 0x0	0x0	 0,0,0	    0,0,0	     #000000	black
 0x1	0x1	 0,0,42	    0,0,170      #0000aa	blue
@@ -21,11 +22,14 @@ CGA	EGA	 VGA	    RGB	         Web    	Example
 0xD	0X3D 63,21,63	255,85,255	 #ff55ff	bright magenta
 0xE	0x3E 63,63,21	255,255,85	 #ffff55	Yellow
 0xF	0x3F 63,63,63	255,255,255	 #ffffff	white
+```
 
 Video memory
 
+```
 +---------------------------------+---------------------------------+
 |  8 bits                         |  8 bits                         | 
 |  7   6   5   4   3   2   1    0 |  7   6   5   4   3   2   1    0 | 
 |blink|color back|color front     |  char code                      |
 +---------------------------------+---------------------------------+
+```

@@ -4,7 +4,7 @@ import (
 	"image"
 	"log"
 
-	"github.com/crgimenes/metal/pcloader/fonts"
+	"github.com/crgimenes/metal/fonts"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
@@ -168,13 +168,13 @@ func bPrintln(msg string) {
 	bPrint(msg)
 }
 
-//var dt byte
-//var c byte
+var dt byte
+var c byte
 
 var machine int
 var kp = 0
 
-//var countaux int
+var countaux int
 
 func update(screen *ebiten.Image) error {
 
@@ -188,19 +188,18 @@ func update(screen *ebiten.Image) error {
 		machine++
 	}
 
-	/*
-		if countaux > 10 {
-			countaux = 0
-			putChar(dt)
-			dt++
-			currentColor = mergeColorCode(0x0, c)
-			c++
-			if c > 15 {
-				c = 0
-			}
+	if countaux > 10 {
+		countaux = 0
+		putChar(dt)
+		dt++
+		currentColor = mergeColorCode(0x0, c)
+		c++
+		if c > 15 {
+			c = 0
 		}
-		countaux++
-	*/
+	}
+	countaux++
+
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
 	//block(screen)
