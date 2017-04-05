@@ -182,9 +182,8 @@ func update(screen *ebiten.Image) error {
 	//cursor -= 2
 
 	if machine == 0 {
-		bPrintln("teste0")
-		bPrintln("teste1")
-		bPrintln("teste2")
+		bPrintln("METAL BASIC 0.01")
+		bPrintln("http://crg.eti.br")
 		machine++
 	}
 
