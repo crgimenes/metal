@@ -168,16 +168,40 @@ func bPrintln(msg string) {
 	bPrint(msg)
 }
 
-var dt byte
+var lastKey = struct {
+	Time uint64
+	Char byte
+}{
+	0,
+	0,
+}
+
+var uTime uint64
 var c byte
 
 var machine int
-var kp = 0
 
-var countaux int
+//var countaux int
+var noKey bool
+
+func keyTreatment(c byte, f func(c byte)) {
+	/*
+		if lastKey.Char != c || lastKey.Time+4 < uTime {
+			f(c)
+			lastKey.Char = c
+			lastKey.Time = uTime
+		}
+	*/
+	if noKey {
+		f(c)
+		noKey = false
+		lastKey.Char = c
+	}
+}
 
 func update(screen *ebiten.Image) error {
 
+	uTime++
 	//putChar(2)
 	//cursor -= 2
 
@@ -186,19 +210,19 @@ func update(screen *ebiten.Image) error {
 		bPrintln("http://crg.eti.br")
 		machine++
 	}
-
-	if countaux > 10 {
-		countaux = 0
-		putChar(dt)
-		dt++
-		currentColor = mergeColorCode(0x0, c)
-		c++
-		if c > 15 {
-			c = 0
+	/*
+		if countaux > 10 {
+			countaux = 0
+			putChar(dt)
+			dt++
+			currentColor = mergeColorCode(0x0, c)
+			c++
+			if c > 15 {
+				c = 0
+			}
 		}
-	}
-	countaux++
-
+		countaux++
+	*/
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
 	//block(screen)
@@ -207,40 +231,43 @@ func update(screen *ebiten.Image) error {
 
 	for c := 'A'; c <= 'Z'; c++ {
 		if ebiten.IsKeyPressed(ebiten.Key(c) - 'A' + ebiten.KeyA) {
-			if kp == 0 {
-				putChar(byte(c))
-			}
-			kp++
+			keyTreatment(byte(c), func(c byte) {
+				putChar(c)
+			})
+			return nil
 		}
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		keyTreatment(byte(' '), func(c byte) {
+			putChar(c)
+		})
+		return nil
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
+		keyTreatment(0, func(c byte) {
+			cursor += columns * 2
+			aux := cursor / (columns * 2)
+			aux = aux * (columns * 2)
+			cursor = aux
+		})
+		return nil
 	}
 
 	////
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		//ebitenutil.DebugPrint(screen, "You're pressing the 'UP' button.")
-		if kp == 0 {
-			cursor -= columns * 2
-		}
-		kp++
+		cursor -= columns * 2
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		//ebitenutil.DebugPrint(screen, "\nYou're pressing the 'DOWN' button.")
-		if kp == 0 {
-			cursor += columns * 2
-		}
-		kp++
+		cursor += columns * 2
 	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		//ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'LEFT' button.")
-		if kp == 0 {
-			cursor -= 2
-		}
-		kp++
+		cursor -= 2
 	} else if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		//ebitenutil.DebugPrint(screen, "\n\n\nYou're pressing the 'RIGHT' button.")
-		if kp == 0 {
-			cursor += 2
-		}
-		kp++
-	} else {
-		kp = 0
+		cursor += 2
 	}
 
 	// When the "left mouse button" is pressed...
@@ -262,6 +289,7 @@ func update(screen *ebiten.Image) error {
 	// Display the information with "X: xx, Y: xx" format
 	//ebitenutil.DebugPrint(screen, fmt.Sprintf("X: %d, Y: %d", x, y))
 
+	noKey = true
 	return nil
 }
 
