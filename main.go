@@ -6,7 +6,6 @@ import (
 
 	"github.com/crgimenes/metal/fonts"
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
 )
 
 const (
@@ -121,7 +120,7 @@ func drawVideoTextMode() {
 func clearVideoTextMode() {
 	copy(videoTextMemory[:], make([]byte, len(videoTextMemory)))
 	for i := 0; i < len(videoTextMemory); i += 2 {
-		videoTextMemory[i] = 0x0F
+		videoTextMemory[i] = currentColor
 	}
 }
 
@@ -129,20 +128,29 @@ func moveLineUp() {
 	copy(videoTextMemory[0:], videoTextMemory[columns*2:])
 	copy(videoTextMemory[len(videoTextMemory)-columns*2:], make([]byte, columns*2))
 	for i := len(videoTextMemory) - columns*2; i < len(videoTextMemory); i += 2 {
-		videoTextMemory[i] = 0x0F
+		videoTextMemory[i] = currentColor
 	}
 
 }
 
-func putChar(c byte) {
-	videoTextMemory[cursor] = currentColor
-	cursor++
-	videoTextMemory[cursor] = c
-	cursor++
-	if cursor >= rows*columns*2 {
+func correctVideoCursor() {
+	if cursor < 0 {
+		cursor = 0
+	}
+	for cursor >= rows*columns*2 {
 		cursor -= columns * 2
 		moveLineUp()
 	}
+}
+
+func putChar(c byte) {
+	correctVideoCursor()
+	videoTextMemory[cursor] = currentColor
+	cursor++
+	correctVideoCursor()
+	videoTextMemory[cursor] = c
+	cursor++
+	correctVideoCursor()
 }
 
 func bPrint(msg string) {
@@ -185,18 +193,97 @@ var machine int
 var noKey bool
 
 func keyTreatment(c byte, f func(c byte)) {
-	/*
-		if lastKey.Char != c || lastKey.Time+4 < uTime {
-			f(c)
-			lastKey.Char = c
-			lastKey.Time = uTime
-		}
-	*/
-	if noKey {
+	if noKey || lastKey.Char != c || lastKey.Time+20 < uTime {
 		f(c)
 		noKey = false
 		lastKey.Char = c
+		lastKey.Time = uTime
 	}
+}
+
+func keyboard() {
+	for c := 'A'; c <= 'Z'; c++ {
+		if ebiten.IsKeyPressed(ebiten.Key(c) - 'A' + ebiten.KeyA) {
+			keyTreatment(byte(c), func(c byte) {
+				putChar(c)
+			})
+			return
+		}
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeySpace) {
+		keyTreatment(byte(' '), func(c byte) {
+			putChar(c)
+		})
+		return
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
+		keyTreatment(0, func(c byte) {
+			cursor += columns * 2
+			aux := cursor / (columns * 2)
+			aux = aux * (columns * 2)
+			cursor = aux
+			correctVideoCursor()
+		})
+		return
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyBackspace) {
+		keyTreatment(0, func(c byte) {
+			cursor -= 2
+			correctVideoCursor()
+		})
+		return
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyUp) {
+		keyTreatment(0, func(c byte) {
+			cursor -= columns * 2
+			correctVideoCursor()
+		})
+		return
+	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
+		keyTreatment(0, func(c byte) {
+			cursor += columns * 2
+			correctVideoCursor()
+		})
+		return
+	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+		keyTreatment(0, func(c byte) {
+			cursor -= 2
+			correctVideoCursor()
+		})
+		return
+	} else if ebiten.IsKeyPressed(ebiten.KeyRight) {
+		keyTreatment(0, func(c byte) {
+			cursor += 2
+			correctVideoCursor()
+		})
+		return
+	}
+
+	// When the "left mouse button" is pressed...
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		//ebitenutil.DebugPrint(screen, "You're pressing the 'LEFT' mouse button.")
+	}
+	// When the "right mouse button" is pressed...
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
+		//ebitenutil.DebugPrint(screen, "\nYou're pressing the 'RIGHT' mouse button.")
+	}
+	// When the "middle mouse button" is pressed...
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle) {
+		//ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'MIDDLE' mouse button.")
+	}
+
+	//x, y := ebiten.CursorPosition()
+	//fmt.Printf("X: %d, Y: %d\n", x, y)
+
+	// Display the information with "X: xx, Y: xx" format
+	//ebitenutil.DebugPrint(screen, fmt.Sprintf("X: %d, Y: %d", x, y))
+
+	noKey = true
+
 }
 
 func update(screen *ebiten.Image) error {
@@ -210,6 +297,7 @@ func update(screen *ebiten.Image) error {
 		bPrintln("http://crg.eti.br")
 		machine++
 	}
+
 	/*
 		if countaux > 10 {
 			countaux = 0
@@ -225,71 +313,7 @@ func update(screen *ebiten.Image) error {
 	*/
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
-	//block(screen)
-
-	//println(cursor)
-
-	for c := 'A'; c <= 'Z'; c++ {
-		if ebiten.IsKeyPressed(ebiten.Key(c) - 'A' + ebiten.KeyA) {
-			keyTreatment(byte(c), func(c byte) {
-				putChar(c)
-			})
-			return nil
-		}
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeySpace) {
-		keyTreatment(byte(' '), func(c byte) {
-			putChar(c)
-		})
-		return nil
-	}
-
-	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
-		keyTreatment(0, func(c byte) {
-			cursor += columns * 2
-			aux := cursor / (columns * 2)
-			aux = aux * (columns * 2)
-			cursor = aux
-		})
-		return nil
-	}
-
-	////
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		//ebitenutil.DebugPrint(screen, "You're pressing the 'UP' button.")
-		cursor -= columns * 2
-	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		//ebitenutil.DebugPrint(screen, "\nYou're pressing the 'DOWN' button.")
-		cursor += columns * 2
-	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) {
-		//ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'LEFT' button.")
-		cursor -= 2
-	} else if ebiten.IsKeyPressed(ebiten.KeyRight) {
-		//ebitenutil.DebugPrint(screen, "\n\n\nYou're pressing the 'RIGHT' button.")
-		cursor += 2
-	}
-
-	// When the "left mouse button" is pressed...
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		ebitenutil.DebugPrint(screen, "You're pressing the 'LEFT' mouse button.")
-	}
-	// When the "right mouse button" is pressed...
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonRight) {
-		ebitenutil.DebugPrint(screen, "\nYou're pressing the 'RIGHT' mouse button.")
-	}
-	// When the "middle mouse button" is pressed...
-	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonMiddle) {
-		ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'MIDDLE' mouse button.")
-	}
-
-	//x, y := ebiten.CursorPosition()
-	//fmt.Printf("X: %d, Y: %d\n", x, y)
-
-	// Display the information with "X: xx, Y: xx" format
-	//ebitenutil.DebugPrint(screen, fmt.Sprintf("X: %d, Y: %d", x, y))
-
-	noKey = true
+	keyboard()
 	return nil
 }
 
