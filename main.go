@@ -11,8 +11,9 @@ import (
 )
 
 const (
-	screenWidth  = 320 // 40 columns
-	screenHeight = 240 // 30 rows
+	border       = 10
+	screenWidth  = 320 + border*2 // 40 columns
+	screenHeight = 240 + border*2 // 30 rows
 
 	rows     = 30
 	columns  = 40
@@ -56,6 +57,8 @@ func mergeColorCode(b, f byte) byte {
 }
 
 func drawPix(x, y int, color byte) {
+	x += border
+	y += border
 	pos := 4*y*screenWidth + 4*x
 	img.Pix[pos] = CGAColors[color].R
 	img.Pix[pos+1] = CGAColors[color].G
