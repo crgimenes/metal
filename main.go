@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"log"
 	"strings"
 
+	"github.com/crgimenes/metal/cmd"
 	"github.com/crgimenes/metal/fonts"
 	"github.com/hajimehoshi/ebiten"
 )
@@ -207,11 +207,14 @@ func getLine() string {
 	aux := cursor / (columns * 2)
 	var ret string
 	for i := aux*(columns*2) + 1; i < aux*(columns*2)+columns*2; i += 2 {
+		c := videoTextMemory[i]
+		if c == 0 {
+			break
+		}
 		ret += string(videoTextMemory[i])
 	}
 
 	ret = strings.TrimSpace(ret)
-	fmt.Println(ret)
 	return ret
 }
 
@@ -234,7 +237,7 @@ func keyboard() {
 
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		keyTreatment(0, func(c byte) {
-			getLine()
+			cmd.Eval(getLine())
 			cursor += columns * 2
 			aux := cursor / (columns * 2)
 			aux = aux * (columns * 2)
