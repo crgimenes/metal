@@ -26,7 +26,7 @@ var (
 	img             *image.RGBA
 	square          *ebiten.Image
 	font            fonts.Expert118x8
-	currentColor    byte = 0x0f
+	currentColor    byte = 0x9f
 )
 
 var CGAColors = []struct {
@@ -323,6 +323,15 @@ func keyboard() {
 
 }
 
+func clearVideo() {
+	for i := 0; i < screenHeight*screenWidth*4; i += 4 {
+		img.Pix[i] = CGAColors[9].R
+		img.Pix[i+1] = CGAColors[9].G
+		img.Pix[i+2] = CGAColors[9].B
+		img.Pix[i+3] = 0xff
+	}
+}
+
 func update(screen *ebiten.Image) error {
 
 	uTime++
@@ -348,6 +357,7 @@ func update(screen *ebiten.Image) error {
 		}
 		countaux++
 	*/
+
 	drawVideoTextMode()
 	screen.ReplacePixels(img.Pix)
 	keyboard()
@@ -360,6 +370,7 @@ func main() {
 	clearVideoTextMode()
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
+	clearVideo()
 	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
 		log.Fatal(err)
 	}
