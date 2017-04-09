@@ -6,7 +6,11 @@ import (
 )
 
 func Eval(c string) {
-	fmt.Printf("[%s]\n", c)
+
+	if c == "" {
+		return
+	}
+	fmt.Printf("%s\n", c)
 
 	if c == `EXIT` {
 		os.Exit(0)
