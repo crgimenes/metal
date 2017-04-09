@@ -228,8 +228,24 @@ func keyboard() {
 		}
 	}
 
+	for c := '0'; c <= '9'; c++ {
+		if ebiten.IsKeyPressed(ebiten.Key(c) - '0' + ebiten.Key0) {
+			keyTreatment(byte(c), func(c byte) {
+				putChar(c)
+			})
+			return
+		}
+	}
+
 	if ebiten.IsKeyPressed(ebiten.KeySpace) {
 		keyTreatment(byte(' '), func(c byte) {
+			putChar(c)
+		})
+		return
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyComma) {
+		keyTreatment(byte(','), func(c byte) {
 			putChar(c)
 		})
 		return
