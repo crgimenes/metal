@@ -269,6 +269,16 @@ func keyboard() {
 	if ebiten.IsKeyPressed(ebiten.KeyBackspace) {
 		keyTreatment(0, func(c byte) {
 			cursor -= 2
+			line := cursor / (columns * 2)
+			lineEnd := line*columns*2 + columns*2
+			if cursor < 0 {
+				cursor = 0
+			}
+
+			copy(videoTextMemory[cursor:lineEnd], videoTextMemory[cursor+2:lineEnd])
+			videoTextMemory[lineEnd-2] = currentColor
+			videoTextMemory[lineEnd-1] = 0
+
 			correctVideoCursor()
 		})
 		return
@@ -280,19 +290,22 @@ func keyboard() {
 			correctVideoCursor()
 		})
 		return
-	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		keyTreatment(0, func(c byte) {
 			cursor += columns * 2
 			correctVideoCursor()
 		})
 		return
-	} else if ebiten.IsKeyPressed(ebiten.KeyLeft) {
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyLeft) {
 		keyTreatment(0, func(c byte) {
 			cursor -= 2
 			correctVideoCursor()
 		})
 		return
-	} else if ebiten.IsKeyPressed(ebiten.KeyRight) {
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyRight) {
 		keyTreatment(0, func(c byte) {
 			cursor += 2
 			correctVideoCursor()
