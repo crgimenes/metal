@@ -1,5 +1,5 @@
 # metal
-Bare metal software
+Bare Metal BASIC
 
 
 Video colors 
