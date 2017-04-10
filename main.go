@@ -196,6 +196,7 @@ var machine int
 
 //var countaux int
 var noKey bool
+var shift bool
 
 func keyTreatment(c byte, f func(c byte)) {
 	if noKey || lastKey.Char != c || lastKey.Time+20 < uTime {
@@ -282,6 +283,36 @@ func keyboard() {
 			correctVideoCursor()
 		})
 		return
+	}
+
+	/*
+	   KeyMinus: -
+	   KeyEqual: =
+	   KeyLeftBracket: [
+	   KeyRightBracket: ]
+	   KeyBackslash:
+	   KeySemicolon: ;
+	   KeyApostrophe: '
+	   KeySlash: /
+	   KeyGraveAccent: `
+	*/
+
+	shift = ebiten.IsKeyPressed(ebiten.KeyShift)
+
+	if ebiten.IsKeyPressed(ebiten.KeyEqual) {
+		if shift {
+			keyTreatment('+', func(c byte) {
+				putChar(c)
+				println("+")
+			})
+			return
+		} else {
+			keyTreatment('=', func(c byte) {
+				putChar(c)
+				println("=")
+			})
+			return
+		}
 	}
 
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
