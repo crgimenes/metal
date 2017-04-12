@@ -3,7 +3,10 @@ package main
 import (
 	"image"
 	"log"
+	"math"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/crgimenes/metal/cmd"
 	"github.com/crgimenes/metal/fonts"
@@ -59,6 +62,9 @@ func mergeColorCode(b, f byte) byte {
 func drawPix(x, y int, color byte) {
 	x += border
 	y += border
+	if x < border || y < border || x >= screenWidth-border || y >= screenHeight-border {
+		return
+	}
 	pos := 4*y*screenWidth + 4*x
 	img.Pix[pos] = CGAColors[color].R
 	img.Pix[pos+1] = CGAColors[color].G
@@ -222,6 +228,8 @@ func getLine() string {
 	return ret
 }
 
+var cpx, cpy int
+
 func keyboard() {
 	for c := 'A'; c <= 'Z'; c++ {
 		if ebiten.IsKeyPressed(ebiten.Key(c) - 'A' + ebiten.KeyA) {
@@ -357,7 +365,9 @@ func keyboard() {
 		//ebitenutil.DebugPrint(screen, "\n\nYou're pressing the 'MIDDLE' mouse button.")
 	}
 
-	//x, y := ebiten.CursorPosition()
+	cpx, cpy = ebiten.CursorPosition()
+	cpx -= border
+	cpy -= border
 	//fmt.Printf("X: %d, Y: %d\n", x, y)
 
 	// Display the information with "X: xx, Y: xx" format
@@ -376,6 +386,154 @@ func clearVideo() {
 	}
 }
 
+/*
+func bLine(x1, y1, x2, y2 int) {
+	dx := x2 - x1
+	dy := y2 - y1
+	for x := x1; x < x2; x++ {
+		y := y1 + dy*(x-x1)/dx
+		drawPix(x, y, 0xf)
+	}
+}
+*/
+
+func bLine(x1, y1, x2, y2 int) {
+	var x, y, dx, dy, dx1, dy1, px, py, xe, ye, i int
+	dx = x2 - x1
+	dy = y2 - y1
+	if dx < 0 {
+		dx1 = -dx
+	} else {
+		dx1 = dx
+	}
+
+	if dy < 0 {
+		dy1 = -dy
+	} else {
+		dy1 = dy
+	}
+	px = 2*dy1 - dx1
+	py = 2*dx1 - dy1
+	if dy1 <= dx1 {
+		if dx >= 0 {
+			x = x1
+			y = y1
+			xe = x2
+		} else {
+			x = x2
+			y = y2
+			xe = x1
+		}
+		drawPix(x, y, 0xf)
+		for i = 0; x < xe; i++ {
+			x = x + 1
+			if px < 0 {
+				px = px + 2*dy1
+			} else {
+				if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) {
+					y = y + 1
+				} else {
+					y = y - 1
+				}
+				px = px + 2*(dy1-dx1)
+			}
+			drawPix(x, y, 0xf)
+		}
+	} else {
+		if dy >= 0 {
+			x = x1
+			y = y1
+			ye = y2
+		} else {
+			x = x2
+			y = y2
+			ye = y1
+		}
+		drawPix(x, y, 0xf)
+		for i = 0; y < ye; i++ {
+			y = y + 1
+			if py <= 0 {
+				py = py + 2*dx1
+			} else {
+				if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) {
+					x = x + 1
+				} else {
+					x = x - 1
+				}
+				py = py + 2*(dx1-dy1)
+			}
+			drawPix(x, y, 0xf)
+		}
+	}
+}
+
+func bBox(x1, y1, x2, y2 int) {
+	for y := y1; y <= y2; y++ {
+		drawPix(x1, y, 0xf)
+		drawPix(x2, y, 0xf)
+	}
+	for x := x1; x <= x2; x++ {
+		drawPix(x, y1, 0xf)
+		drawPix(x, y2, 0xf)
+	}
+}
+
+func bCircle(x0, y0, radius int) {
+	x := radius
+	y := 0
+	e := 0
+
+	for x >= y {
+		drawPix(x0+x, y0+y, 0xf)
+		drawPix(x0+y, y0+x, 0xf)
+		drawPix(x0-y, y0+x, 0xf)
+		drawPix(x0-x, y0+y, 0xf)
+		drawPix(x0-x, y0-y, 0xf)
+		drawPix(x0-y, y0-x, 0xf)
+		drawPix(x0+y, y0-x, 0xf)
+		drawPix(x0+x, y0-y, 0xf)
+
+		if e <= 0 {
+			y += 1
+			e += 2*y + 1
+		}
+		if e > 0 {
+			x -= 1
+			e -= 2*x + 1
+		}
+	}
+}
+
+func bFilledCircle(x0, y0, radius int) {
+	x := radius
+	y := 0
+	xChange := 1 - (radius << 1)
+	yChange := 0
+	radiusError := 0
+
+	for x >= y {
+		for i := x0 - x; i <= x0+x; i++ {
+			drawPix(i, y0+y, 0xf)
+			drawPix(i, y0-y, 0xf)
+		}
+		for i := x0 - y; i <= x0+y; i++ {
+			drawPix(i, y0+x, 0xf)
+			drawPix(i, y0-x, 0xf)
+		}
+
+		y++
+		radiusError += yChange
+		yChange += 2
+		if ((radiusError << 1) + xChange) > 0 {
+			x--
+			radiusError += xChange
+			xChange += 2
+		}
+	}
+}
+
+var ranking = 1000000
+
 func update(screen *ebiten.Image) error {
 
 	uTime++
@@ -387,7 +545,11 @@ func update(screen *ebiten.Image) error {
 		bPrintln("http://crg.eti.br")
 		machine++
 	}
+	machine++
 
+	if machine > 10 {
+		return nil
+	}
 	/*
 		if countaux > 10 {
 			countaux = 0
@@ -403,15 +565,59 @@ func update(screen *ebiten.Image) error {
 	*/
 
 	drawVideoTextMode()
+
+	//bCircle(100, 100, 10)
+	for i := 0; i < len(a); i++ {
+		bFilledCircle(a[i].X, a[i].Y, 5)
+
+		a[i].X += random(-1, +2)
+		a[i].Y += random(-1, +2)
+	}
+
+	bLine(100, 100, cpx, cpy)
+
+	//bLine(50, 50, 50, 100)
+	//bLine(50, 100, 100, 100)
+	//bLine(50, 50, 100, 50)
+	//bLine(100, 50, 100, 100)
+
+	//bLine(50, 50, 100, 100)
+	//bLine(100, 50, 94, 44)
+	//	bBox(50, 50, 100, 100)
+
 	screen.ReplacePixels(img.Pix)
 	keyboard()
 	return nil
 }
 
-func main() {
+func distance(x1, y1, x2, y2 int) int {
+	first := math.Pow(float64(x2-x1), 2)
+	second := math.Pow(float64(y2-y1), 2)
+	return int(math.Sqrt(first + second))
+}
 
+func random(min, max int) int {
+	return rand.Intn(max-min) + min
+}
+
+type dot struct {
+	X int
+	Y int
+	B bool
+}
+
+var a []dot
+
+func main() {
+	rand.Seed(time.Now().Unix())
 	font.Load()
 	clearVideoTextMode()
+
+	for i := 0; i < 10; i++ {
+		x, y := random(0, screenWidth), random(0, screenHeight)
+		d := dot{X: x, Y: y}
+		a = append(a, d)
+	}
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	clearVideo()
