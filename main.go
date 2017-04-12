@@ -24,13 +24,25 @@ const (
 )
 
 var (
-	videoTextMemory [rows * columns * 2]byte
-	cursor          int
-	img             *image.RGBA
-	square          *ebiten.Image
-	font            fonts.Expert118x8
-	currentColor    byte = 0x9f
-	updateScreen    bool
+	videoTextMemory  [rows * columns * 2]byte
+	cursor           int
+	img              *image.RGBA
+	square           *ebiten.Image
+	font             fonts.Expert118x8
+	currentColor     byte = 0x9f
+	updateScreen     bool
+	cpx, cpy         int
+	cursorBlinkTimer int
+	cursorSetBlink   bool = true
+
+	uTime uint64
+
+	machine int
+
+	//var countaux int
+	noKey bool
+	shift bool
+	tmp   *ebiten.Image
 )
 
 var CGAColors = []struct {
@@ -92,9 +104,6 @@ func drawChar(index, fgColor, bgColor byte, x, y int) {
 		}
 	}
 }
-
-var cursorBlinkTimer int
-var cursorSetBlink bool = true
 
 func drawCursor(index, fgColor, bgColor byte, x, y int) {
 	if cursorSetBlink {
@@ -197,15 +206,6 @@ var lastKey = struct {
 	0,
 }
 
-var uTime uint64
-var c byte
-
-var machine int
-
-//var countaux int
-var noKey bool
-var shift bool
-
 func keyTreatment(c byte, f func(c byte)) {
 	if noKey || lastKey.Char != c || lastKey.Time+20 < uTime {
 		f(c)
@@ -230,9 +230,7 @@ func getLine() string {
 	return ret
 }
 
-var cpx, cpy int
-
-func keyboard() {
+func input() {
 	for c := 'A'; c <= 'Z'; c++ {
 		if ebiten.IsKeyPressed(ebiten.Key(c) - 'A' + ebiten.KeyA) {
 			keyTreatment(byte(c), func(c byte) {
@@ -589,7 +587,7 @@ func update(screen *ebiten.Image) error {
 
 	screen.DrawImage(tmp, nil)
 	//screen.ReplacePixels(img.Pix)
-	keyboard()
+	input()
 	return nil
 }
 
@@ -603,25 +601,10 @@ func random(min, max int) int {
 	return rand.Intn(max-min) + min
 }
 
-type dot struct {
-	X int
-	Y int
-	B bool
-}
-
-var a []dot
-var tmp *ebiten.Image
-
 func main() {
 	rand.Seed(time.Now().Unix())
 	font.Load()
 	clearVideoTextMode()
-
-	for i := 0; i < 10; i++ {
-		x, y := random(0, screenWidth), random(0, screenHeight)
-		d := dot{X: x, Y: y}
-		a = append(a, d)
-	}
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
 	tmp, _ = ebiten.NewImage(screenWidth, screenHeight, ebiten.FilterNearest)
