@@ -30,6 +30,7 @@ var (
 	square          *ebiten.Image
 	font            fonts.Expert118x8
 	currentColor    byte = 0x9f
+	updateScreen    bool
 )
 
 var CGAColors = []struct {
@@ -70,6 +71,7 @@ func drawPix(x, y int, color byte) {
 	img.Pix[pos+1] = CGAColors[color].G
 	img.Pix[pos+2] = CGAColors[color].B
 	img.Pix[pos+3] = 0xff
+	updateScreen = true
 }
 
 func getBit(n int, pos uint64) bool {
@@ -532,8 +534,6 @@ func bFilledCircle(x0, y0, radius int) {
 	}
 }
 
-var ranking = 1000000
-
 func update(screen *ebiten.Image) error {
 
 	uTime++
@@ -545,11 +545,8 @@ func update(screen *ebiten.Image) error {
 		bPrintln("http://crg.eti.br")
 		machine++
 	}
-	machine++
+	//machine++
 
-	if machine > 10 {
-		return nil
-	}
 	/*
 		if countaux > 10 {
 			countaux = 0
@@ -567,14 +564,14 @@ func update(screen *ebiten.Image) error {
 	drawVideoTextMode()
 
 	//bCircle(100, 100, 10)
-	for i := 0; i < len(a); i++ {
-		bFilledCircle(a[i].X, a[i].Y, 5)
+	//for i := 0; i < len(a); i++ {
+	//	bFilledCircle(a[i].X, a[i].Y, 5)
 
-		a[i].X += random(-1, +2)
-		a[i].Y += random(-1, +2)
-	}
+	//	a[i].X += random(-1, +2)
+	//	a[i].Y += random(-1, +2)
+	//}
 
-	bLine(100, 100, cpx, cpy)
+	//bLine(100, 100, cpx, cpy)
 
 	//bLine(50, 50, 50, 100)
 	//bLine(50, 100, 100, 100)
@@ -585,7 +582,13 @@ func update(screen *ebiten.Image) error {
 	//bLine(100, 50, 94, 44)
 	//	bBox(50, 50, 100, 100)
 
-	screen.ReplacePixels(img.Pix)
+	if updateScreen {
+		tmp.ReplacePixels(img.Pix)
+		updateScreen = false
+	}
+
+	screen.DrawImage(tmp, nil)
+	//screen.ReplacePixels(img.Pix)
 	keyboard()
 	return nil
 }
@@ -607,6 +610,7 @@ type dot struct {
 }
 
 var a []dot
+var tmp *ebiten.Image
 
 func main() {
 	rand.Seed(time.Now().Unix())
@@ -620,6 +624,8 @@ func main() {
 	}
 
 	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
+	tmp, _ = ebiten.NewImage(screenWidth, screenHeight, ebiten.FilterNearest)
+
 	clearVideo()
 	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
 		log.Fatal(err)
