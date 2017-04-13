@@ -2,22 +2,17 @@ package main
 
 import (
 	"image"
-	"log"
-	"math"
 	"math/rand"
 	"strings"
 	"time"
 
+	"github.com/crgimenes/graphos/coreScreen"
 	"github.com/crgimenes/metal/cmd"
 	"github.com/crgimenes/metal/fonts"
 	"github.com/hajimehoshi/ebiten"
 )
 
 const (
-	border       = 10
-	screenWidth  = 320 + border*2 // 40 columns
-	screenHeight = 240 + border*2 // 30 rows
-
 	rows     = 30
 	columns  = 40
 	rgbaSize = 4
@@ -27,7 +22,6 @@ var (
 	videoTextMemory  [rows * columns * 2]byte
 	cursor           int
 	img              *image.RGBA
-	square           *ebiten.Image
 	font             fonts.Expert118x8
 	currentColor     byte = 0x9f
 	updateScreen     bool
@@ -42,102 +36,9 @@ var (
 	//var countaux int
 	noKey bool
 	shift bool
-	tmp   *ebiten.Image
+
+	cs *coreScreen.Instance
 )
-
-var CGAColors = []struct {
-	R byte
-	G byte
-	B byte
-}{
-	{0, 0, 0},
-	{0, 0, 170},
-	{0, 170, 0},
-	{0, 170, 170},
-	{170, 0, 0},
-	{170, 0, 170},
-	{170, 85, 0},
-	{170, 170, 170},
-	{85, 85, 85},
-	{85, 85, 255},
-	{85, 255, 85},
-	{85, 255, 255},
-	{255, 85, 85},
-	{255, 85, 255},
-	{255, 255, 85},
-	{255, 255, 255},
-}
-
-func mergeColorCode(b, f byte) byte {
-	return (f & 0xff) | (b << 4)
-}
-
-func drawPix(x, y int, color byte) {
-	x += border
-	y += border
-	if x < border || y < border || x >= screenWidth-border || y >= screenHeight-border {
-		return
-	}
-	pos := 4*y*screenWidth + 4*x
-	img.Pix[pos] = CGAColors[color].R
-	img.Pix[pos+1] = CGAColors[color].G
-	img.Pix[pos+2] = CGAColors[color].B
-	img.Pix[pos+3] = 0xff
-	updateScreen = true
-}
-
-func getBit(n int, pos uint64) bool {
-	// from right to left
-	val := n & (1 << pos)
-	return (val > 0)
-}
-
-func drawChar(index, fgColor, bgColor byte, x, y int) {
-	var a, b uint64
-	for a = 0; a < 8; a++ {
-		for b = 0; b < 8; b++ {
-			if font.Bitmap[index][b]&(0x80>>a) != 0 {
-				drawPix(int(a)+x, int(b)+y, fgColor)
-			} else {
-				drawPix(int(a)+x, int(b)+y, bgColor)
-			}
-		}
-	}
-}
-
-func drawCursor(index, fgColor, bgColor byte, x, y int) {
-	if cursorSetBlink {
-		if cursorBlinkTimer < 15 {
-			drawChar(index, fgColor, bgColor, x, y)
-		} else {
-			drawChar(index, bgColor, fgColor, x, y)
-		}
-		cursorBlinkTimer++
-		if cursorBlinkTimer > 30 {
-			cursorBlinkTimer = 0
-		}
-	} else {
-		drawChar(index, bgColor, fgColor, x, y)
-	}
-}
-
-func drawVideoTextMode() {
-	i := 0
-	for r := 0; r < rows; r++ {
-		for c := 0; c < columns; c++ {
-			color := videoTextMemory[i]
-			f := color & 0x0f
-			b := color & 0xf0 >> 4
-			i++
-			if i-1 == cursor {
-				drawCursor(videoTextMemory[i], f, b, c*8, r*8)
-			} else {
-				drawChar(videoTextMemory[i], f, b, c*8, r*8)
-			}
-			i++
-		}
-	}
-}
 
 func clearVideoTextMode() {
 	copy(videoTextMemory[:], make([]byte, len(videoTextMemory)))
@@ -366,8 +267,8 @@ func input() {
 	}
 
 	cpx, cpy = ebiten.CursorPosition()
-	cpx -= border
-	cpy -= border
+	cpx -= cs.Border
+	cpy -= cs.Border
 	//fmt.Printf("X: %d, Y: %d\n", x, y)
 
 	// Display the information with "X: xx, Y: xx" format
@@ -377,162 +278,56 @@ func input() {
 
 }
 
-func clearVideo() {
-	for i := 0; i < screenHeight*screenWidth*4; i += 4 {
-		img.Pix[i] = CGAColors[9].R
-		img.Pix[i+1] = CGAColors[9].G
-		img.Pix[i+2] = CGAColors[9].B
-		img.Pix[i+3] = 0xff
-	}
-}
-
-/*
-func bLine(x1, y1, x2, y2 int) {
-	dx := x2 - x1
-	dy := y2 - y1
-	for x := x1; x < x2; x++ {
-		y := y1 + dy*(x-x1)/dx
-		drawPix(x, y, 0xf)
-	}
-}
-*/
-
-func bLine(x1, y1, x2, y2 int) {
-	var x, y, dx, dy, dx1, dy1, px, py, xe, ye, i int
-	dx = x2 - x1
-	dy = y2 - y1
-	if dx < 0 {
-		dx1 = -dx
-	} else {
-		dx1 = dx
-	}
-
-	if dy < 0 {
-		dy1 = -dy
-	} else {
-		dy1 = dy
-	}
-	px = 2*dy1 - dx1
-	py = 2*dx1 - dy1
-	if dy1 <= dx1 {
-		if dx >= 0 {
-			x = x1
-			y = y1
-			xe = x2
-		} else {
-			x = x2
-			y = y2
-			xe = x1
-		}
-		drawPix(x, y, 0xf)
-		for i = 0; x < xe; i++ {
-			x = x + 1
-			if px < 0 {
-				px = px + 2*dy1
+func drawChar(index, fgColor, bgColor byte, x, y int) {
+	var a, b uint64
+	for a = 0; a < 8; a++ {
+		for b = 0; b < 8; b++ {
+			if font.Bitmap[index][b]&(0x80>>a) != 0 {
+				cs.CurrentColor = fgColor
+				cs.DrawPix(int(a)+x, int(b)+y)
 			} else {
-				if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) {
-					y = y + 1
-				} else {
-					y = y - 1
-				}
-				px = px + 2*(dy1-dx1)
+				cs.CurrentColor = bgColor
+				cs.DrawPix(int(a)+x, int(b)+y)
 			}
-			drawPix(x, y, 0xf)
+		}
+	}
+}
+
+func drawCursor(index, fgColor, bgColor byte, x, y int) {
+	if cursorSetBlink {
+		if cursorBlinkTimer < 15 {
+			drawChar(index, fgColor, bgColor, x, y)
+		} else {
+			drawChar(index, bgColor, fgColor, x, y)
+		}
+		cursorBlinkTimer++
+		if cursorBlinkTimer > 30 {
+			cursorBlinkTimer = 0
 		}
 	} else {
-		if dy >= 0 {
-			x = x1
-			y = y1
-			ye = y2
-		} else {
-			x = x2
-			y = y2
-			ye = y1
-		}
-		drawPix(x, y, 0xf)
-		for i = 0; y < ye; i++ {
-			y = y + 1
-			if py <= 0 {
-				py = py + 2*dx1
+		drawChar(index, bgColor, fgColor, x, y)
+	}
+}
+
+func drawVideoTextMode() {
+	i := 0
+	for r := 0; r < rows; r++ {
+		for c := 0; c < columns; c++ {
+			color := videoTextMemory[i]
+			f := color & 0x0f
+			b := color & 0xf0 >> 4
+			i++
+			if i-1 == cursor {
+				drawCursor(videoTextMemory[i], f, b, c*8, r*8)
 			} else {
-				if (dx < 0 && dy < 0) || (dx > 0 && dy > 0) {
-					x = x + 1
-				} else {
-					x = x - 1
-				}
-				py = py + 2*(dx1-dy1)
+				drawChar(videoTextMemory[i], f, b, c*8, r*8)
 			}
-			drawPix(x, y, 0xf)
+			i++
 		}
 	}
 }
 
-func bBox(x1, y1, x2, y2 int) {
-	for y := y1; y <= y2; y++ {
-		drawPix(x1, y, 0xf)
-		drawPix(x2, y, 0xf)
-	}
-	for x := x1; x <= x2; x++ {
-		drawPix(x, y1, 0xf)
-		drawPix(x, y2, 0xf)
-	}
-}
-
-func bCircle(x0, y0, radius int) {
-	x := radius
-	y := 0
-	e := 0
-
-	for x >= y {
-		drawPix(x0+x, y0+y, 0xf)
-		drawPix(x0+y, y0+x, 0xf)
-		drawPix(x0-y, y0+x, 0xf)
-		drawPix(x0-x, y0+y, 0xf)
-		drawPix(x0-x, y0-y, 0xf)
-		drawPix(x0-y, y0-x, 0xf)
-		drawPix(x0+y, y0-x, 0xf)
-		drawPix(x0+x, y0-y, 0xf)
-
-		if e <= 0 {
-			y += 1
-			e += 2*y + 1
-		}
-		if e > 0 {
-			x -= 1
-			e -= 2*x + 1
-		}
-	}
-}
-
-func bFilledCircle(x0, y0, radius int) {
-	x := radius
-	y := 0
-	xChange := 1 - (radius << 1)
-	yChange := 0
-	radiusError := 0
-
-	for x >= y {
-		for i := x0 - x; i <= x0+x; i++ {
-			drawPix(i, y0+y, 0xf)
-			drawPix(i, y0-y, 0xf)
-		}
-		for i := x0 - y; i <= x0+y; i++ {
-			drawPix(i, y0+x, 0xf)
-			drawPix(i, y0-x, 0xf)
-		}
-
-		y++
-		radiusError += yChange
-		yChange += 2
-		if ((radiusError << 1) + xChange) > 0 {
-			x--
-			radiusError += xChange
-			xChange += 2
-		}
-	}
-}
-
-func update(screen *ebiten.Image) error {
+func update(screen *coreScreen.Instance) error {
 
 	uTime++
 	//putChar(2)
@@ -580,21 +375,8 @@ func update(screen *ebiten.Image) error {
 	//bLine(100, 50, 94, 44)
 	//	bBox(50, 50, 100, 100)
 
-	if updateScreen {
-		tmp.ReplacePixels(img.Pix)
-		updateScreen = false
-	}
-
-	screen.DrawImage(tmp, nil)
-	//screen.ReplacePixels(img.Pix)
 	input()
 	return nil
-}
-
-func distance(x1, y1, x2, y2 int) int {
-	first := math.Pow(float64(x2-x1), 2)
-	second := math.Pow(float64(y2-y1), 2)
-	return int(math.Sqrt(first + second))
 }
 
 func random(min, max int) int {
@@ -606,12 +388,14 @@ func main() {
 	font.Load()
 	clearVideoTextMode()
 
-	img = image.NewRGBA(image.Rect(0, 0, screenWidth, screenHeight))
-	tmp, _ = ebiten.NewImage(screenWidth, screenHeight, ebiten.FilterNearest)
+	cs = coreScreen.Get()
 
-	clearVideo()
-	if err := ebiten.Run(update, screenWidth, screenHeight, 2, "METAL BASIC 0.01"); err != nil {
-		log.Fatal(err)
-	}
+	cs.Border = 10
+	cs.Width = 320 + cs.Border*2  // 40 columns
+	cs.Height = 240 + cs.Border*2 // 30 rows
+	cs.Update = update
+	cs.Title = "Metal BASIC 0.01"
+
+	cs.Run()
 
 }
