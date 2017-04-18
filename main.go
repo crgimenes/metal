@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/crgimenes/graphos/coreScreen"
+	"github.com/crgimenes/graphos/coreGame"
 	"github.com/crgimenes/metal/cmd"
 	"github.com/crgimenes/metal/fonts"
 	"github.com/hajimehoshi/ebiten"
@@ -37,7 +37,7 @@ var (
 	noKey bool
 	shift bool
 
-	cs *coreScreen.Instance
+	cs *coreGame.Instance
 )
 
 func clearVideoTextMode() {
@@ -327,7 +327,7 @@ func drawVideoTextMode() {
 	}
 }
 
-func update(screen *coreScreen.Instance) error {
+func update(screen *coreGame.Instance) error {
 
 	uTime++
 	//putChar(2)
@@ -388,12 +388,13 @@ func main() {
 	font.Load()
 	clearVideoTextMode()
 
-	cs = coreScreen.Get()
+	cs = coreGame.Get()
 
+	cs.Scale = 3
 	cs.Border = 10
 	cs.Width = 320 + cs.Border*2  // 40 columns
 	cs.Height = 240 + cs.Border*2 // 30 rows
-	cs.Update = update
+	cs.ScreenHandler = update
 	cs.Title = "Metal BASIC 0.01"
 
 	cs.Run()
