@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"text/scanner"
 
-	"github.com/crgimenes/goConfig"
+	"crg.eti.br/go/config"
 )
 
-type config struct {
+type Config struct {
 	InputFile  string `json:"i" cfg:"i"`
 	OutputFile string `json:"o" cfg:"o"`
 }
@@ -27,17 +27,17 @@ const alert = "/* Automatically generated, do not change manually. */"
 
 func main() {
 
-	cfg := config{}
+	cfg := Config{}
 
-	goConfig.PrefixEnv = "BMV"
-	err := goConfig.Parse(&cfg)
+	config.PrefixEnv = "BMV"
+	err := config.Parse(&cfg)
 	if err != nil {
 		println(err.Error())
 		os.Exit(1)
 	}
 
 	if cfg.InputFile == "" {
-		goConfig.Usage()
+		config.Usage()
 		os.Exit(1)
 	}
 
