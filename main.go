@@ -4,7 +4,6 @@ import (
 	"image"
 	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/crgimenes/graphos/coreGame"
 	"github.com/crgimenes/metal/cmd"
@@ -384,7 +383,6 @@ func random(min, max int) int {
 }
 
 func main() {
-	rand.Seed(time.Now().Unix())
 	font.Load()
 	clearVideoTextMode()
 
